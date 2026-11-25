@@ -28,6 +28,8 @@ export interface SheetDatasetResponse {
   dataset: FinanceDataset;
 }
 
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+
 async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -38,11 +40,21 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
     headers['Authorization'] = `Bearer ${sessionTokenInMemory}`;
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const targetUrl = API_BASE_URL && url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
 
+  let res: Response;
+  try {
+    res = await fetch(targetUrl, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new Error(
+      'Unable to reach the backend server. Check that your server is running and reachable.'
+    );
+  }
+
+  const contentType = res.headers.get('content-type') || '';
   const text = await res.text();
   let parsed: {
     ok?: boolean;
@@ -54,7 +66,12 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   try {
     parsed = text ? JSON.parse(text) : {};
   } catch {
-    throw new Error('Unexpected response from server.');
+    if (contentType.includes('text/html') || text.trimStart().startsWith('<')) {
+      throw new Error(
+        'Backend API (/api) is not active on this host (received HTML instead of JSON). Deploy with the Node server (npm start) or Vercel serverless API routes, and set GAS_WEB_APP_URL and GAS_API_SECRET in your host environment variables.'
+      );
+    }
+    throw new Error(`Unexpected response from server (HTTP ${res.status}).`);
   }
 
   if (!res.ok || parsed.ok === false) {
