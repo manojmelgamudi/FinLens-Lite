@@ -5,7 +5,7 @@ Personal finance, lending, EMI tracker, investment portfolio, and debt manager b
 ## Architecture
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Vite PWA (`src/`)
-- **Backend Proxy**: Express server (`server.ts`, `server/apiApp.ts`) and Vercel catch-all handler (`api/[...path].ts`) that proxy `/api/*` requests to Google Apps Script
+- **Backend Proxy**: Express server (`server.ts`, `server/apiApp.ts`) and Vercel serverless endpoints (`api/auth/*`, `api/finance/*`) that proxy `/api/*` requests to Google Apps Script
 - **Database**: Google Sheets via Google Apps Script Web App (`apps-script/*.gs`)
 
 > **Important:** Because the frontend calls `/api/*` endpoints that hold your `GAS_WEB_APP_URL` and `GAS_API_SECRET`, deploy this project to a host that runs `/api/*` routes (such as **Vercel**, **Render**, **Railway**, **Fly.io**, or **Google Cloud Run**)—not a static-only host like GitHub Pages unless `VITE_API_BASE_URL` points to a separately hosted backend.
@@ -44,7 +44,7 @@ Set these environment variables on your hosting provider (never commit `.env` fi
 ## 3. Deployment Options
 
 ### Option A: Vercel
-1. Import the GitHub repository into Vercel (Vite preset is auto-detected; `vercel.json` and `api/[...path].ts` handle SPA + `/api/*` routing automatically).
+1. Import the GitHub repository into Vercel (Vite preset is auto-detected; `vercel.json` and `api/` serverless endpoints handle SPA + `/api/*` routing automatically).
 2. Add `GAS_WEB_APP_URL` and `GAS_API_SECRET` in **Vercel Project Settings → Environment Variables**.
 3. Deploy.
 
